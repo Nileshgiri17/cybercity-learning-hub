@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Calculator, FileText, Globe, Monitor, Palette, Keyboard, 
-  GraduationCap, Trophy, Clock, Users, CheckCircle
+  GraduationCap, Trophy, Clock, Users, CheckCircle, BookOpen
 } from 'lucide-react';
 
 const Courses = () => {
