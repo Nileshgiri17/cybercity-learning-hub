@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
-import { Calendar, FileText, CreditCard, Users, CheckCircle, Phone } from 'lucide-react';
+import { Calendar, FileText, CreditCard, Users, CheckCircle, Phone, AlertCircle } from 'lucide-react';
+import { validateName, validateEmail, validatePhone, validateRequired } from '../utils/validation';
 
 const Admission = () => {
   const [formData, setFormData] = useState({
@@ -13,17 +13,110 @@ const Admission = () => {
     preferredTiming: ''
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleBlur = (fieldName: string) => {
+    setTouched(prev => ({
+      ...prev,
+      [fieldName]: true
+    }));
+
+    const value = formData[fieldName as keyof typeof formData];
+    let validation;
+
+    switch (fieldName) {
+      case 'name':
+        validation = validateName(value);
+        break;
+      case 'email':
+        validation = validateEmail(value);
+        break;
+      case 'phone':
+        validation = validatePhone(value);
+        break;
+      case 'course':
+        validation = validateRequired(value, 'Course');
+        break;
+      case 'education':
+        validation = validateRequired(value, 'Educational Qualification');
+        break;
+      default:
+        return;
+    }
+
+    if (!validation.isValid) {
+      setErrors(prev => ({
+        ...prev,
+        [fieldName]: validation.error || ''
+      }));
+    }
+  };
+
+  const getInputClass = (fieldName: string) => {
+    const baseClass = "w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 form-input";
+    
+    if (touched[fieldName]) {
+      if (errors[fieldName]) {
+        return `${baseClass} input-error`;
+      } else if (formData[fieldName as keyof typeof formData]) {
+        return `${baseClass} input-success`;
+      }
+    }
+    
+    return `${baseClass} border-gray-300`;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Handle form submission here
+    
+    // Validate all required fields
+    const newErrors: Record<string, string> = {};
+    
+    const nameValidation = validateName(formData.name);
+    if (!nameValidation.isValid) newErrors.name = nameValidation.error!;
+    
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.isValid) newErrors.email = emailValidation.error!;
+    
+    const phoneValidation = validatePhone(formData.phone);
+    if (!phoneValidation.isValid) newErrors.phone = phoneValidation.error!;
+    
+    const courseValidation = validateRequired(formData.course, 'Course');
+    if (!courseValidation.isValid) newErrors.course = courseValidation.error!;
+    
+    const educationValidation = validateRequired(formData.education, 'Educational Qualification');
+    if (!educationValidation.isValid) newErrors.education = educationValidation.error!;
+
+    setErrors(newErrors);
+    setTouched({
+      name: true,
+      email: true,
+      phone: true,
+      course: true,
+      education: true
+    });
+
+    if (Object.keys(newErrors).length === 0) {
+      console.log('Form submitted successfully:', formData);
+      // Handle successful submission
+    }
   };
 
   const admissionSteps = [
@@ -79,23 +172,23 @@ const Admission = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-fade-in">
             Admission Open for 2023-2024
           </h1>
-          <p className="text-xl mb-8 max-w-3xl mx-auto opacity-90">
+          <p className="text-xl mb-8 max-w-3xl mx-auto opacity-90 animate-slide-up animate-delay-200">
             Start your journey towards a successful career in computer technology
           </p>
         </div>
       </section>
 
       {/* Admission Process */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-muted">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 animate-fade-in">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Admission Process</h2>
             <p className="text-lg text-gray-600">Simple 4-step process to get admitted</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {admissionSteps.map((step, index) => (
-              <div key={index} className="text-center">
+              <div key={index} className={`text-center hover-lift animate-slide-up animate-delay-${(index + 1) * 100}`}>
                 <div className="bg-primary text-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 relative">
                   <step.icon className="w-10 h-10" />
                   <div className="absolute -top-2 -right-2 bg-secondary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
@@ -114,15 +207,15 @@ const Admission = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
+            <div className="text-center mb-12 animate-fade-in">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Apply for Admission</h2>
               <p className="text-lg text-gray-600">Fill out the form below to start your admission process</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Application Form */}
-              <div className="lg:col-span-2">
-                <form onSubmit={handleSubmit} className="bg-gray-50 p-8 rounded-lg">
+              <div className="lg:col-span-2 animate-slide-in-left">
+                <form onSubmit={handleSubmit} className="bg-muted p-8 rounded-lg shadow-lg">
                   <h3 className="text-2xl font-bold mb-6">Application Form</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -135,9 +228,16 @@ const Admission = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        required
+                        onBlur={() => handleBlur('name')}
+                        className={getInputClass('name')}
+                        placeholder="Enter your full name"
                       />
+                      {errors.name && (
+                        <div className="error-message">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.name}
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -149,9 +249,16 @@ const Admission = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        required
+                        onBlur={() => handleBlur('email')}
+                        className={getInputClass('email')}
+                        placeholder="Enter your email address"
                       />
+                      {errors.email && (
+                        <div className="error-message">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.email}
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -163,9 +270,16 @@ const Admission = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        required
+                        onBlur={() => handleBlur('phone')}
+                        className={getInputClass('phone')}
+                        placeholder="Enter your phone number"
                       />
+                      {errors.phone && (
+                        <div className="error-message">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.phone}
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -176,14 +290,20 @@ const Admission = () => {
                         name="course"
                         value={formData.course}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        required
+                        onBlur={() => handleBlur('course')}
+                        className={getInputClass('course')}
                       >
                         <option value="">Select a course</option>
                         {courses.map((course, index) => (
                           <option key={index} value={course}>{course}</option>
                         ))}
                       </select>
+                      {errors.course && (
+                        <div className="error-message">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.course}
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -194,8 +314,8 @@ const Admission = () => {
                         name="education"
                         value={formData.education}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        required
+                        onBlur={() => handleBlur('education')}
+                        className={getInputClass('education')}
                       >
                         <option value="">Select qualification</option>
                         <option value="10th">10th Pass</option>
@@ -203,6 +323,12 @@ const Admission = () => {
                         <option value="graduate">Graduate</option>
                         <option value="postgraduate">Post Graduate</option>
                       </select>
+                      {errors.education && (
+                        <div className="error-message">
+                          <AlertCircle className="w-4 h-4" />
+                          {errors.education}
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -213,7 +339,7 @@ const Admission = () => {
                         name="category"
                         value={formData.category}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className={getInputClass('category')}
                       >
                         <option value="">Select category</option>
                         <option value="general">General</option>
@@ -231,7 +357,7 @@ const Admission = () => {
                         name="preferredTiming"
                         value={formData.preferredTiming}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        className={getInputClass('preferredTiming')}
                       >
                         <option value="">Select timing</option>
                         <option value="morning">Morning (9:00 AM - 12:00 PM)</option>
@@ -243,7 +369,7 @@ const Admission = () => {
 
                   <button
                     type="submit"
-                    className="w-full bg-primary hover:bg-primary/90 text-white py-4 px-6 rounded-lg font-semibold text-lg transition-colors mt-8"
+                    className="w-full bg-primary hover:bg-primary/90 text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-300 mt-8 hover:scale-105"
                   >
                     Submit Application
                   </button>
@@ -251,9 +377,9 @@ const Admission = () => {
               </div>
 
               {/* Sidebar Information */}
-              <div className="space-y-6">
+              <div className="space-y-6 animate-slide-in-right">
                 {/* Contact Info */}
-                <div className="bg-primary text-white p-6 rounded-lg">
+                <div className="bg-primary text-white p-6 rounded-lg hover-lift">
                   <h3 className="text-xl font-bold mb-4">Need Help?</h3>
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
@@ -271,7 +397,7 @@ const Admission = () => {
                 </div>
 
                 {/* Required Documents */}
-                <div className="bg-gray-50 p-6 rounded-lg">
+                <div className="bg-muted p-6 rounded-lg hover-lift">
                   <h3 className="text-xl font-bold mb-4">Required Documents</h3>
                   <ul className="space-y-2">
                     {documents.map((doc, index) => (
@@ -284,7 +410,7 @@ const Admission = () => {
                 </div>
 
                 {/* Special Offers */}
-                <div className="bg-secondary text-white p-6 rounded-lg">
+                <div className="bg-secondary text-white p-6 rounded-lg hover-lift">
                   <h3 className="text-xl font-bold mb-4">Special Discounts</h3>
                   <ul className="space-y-2 text-sm">
                     <li>• ST/SC/OBC students get special fee discount</li>
@@ -300,25 +426,20 @@ const Admission = () => {
       </section>
 
       {/* Quick Stats */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-muted">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">5000+</div>
-              <div className="text-gray-600">Students Enrolled</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">95%</div>
-              <div className="text-gray-600">Placement Rate</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">50+</div>
-              <div className="text-gray-600">Course Options</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-primary mb-2">10+</div>
-              <div className="text-gray-600">Years Experience</div>
-            </div>
+            {[
+              { number: '5000+', label: 'Students Enrolled' },
+              { number: '95%', label: 'Placement Rate' },
+              { number: '50+', label: 'Course Options' },
+              { number: '10+', label: 'Years Experience' }
+            ].map((stat, index) => (
+              <div key={index} className={`animate-scale-in animate-delay-${(index + 1) * 100}`}>
+                <div className="text-3xl font-bold text-primary mb-2">{stat.number}</div>
+                <div className="text-gray-600">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

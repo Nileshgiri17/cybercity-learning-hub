@@ -3,6 +3,8 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Phone, Mail, MapPin } from 'lucide-react';
 import { useState } from 'react';
+import WhatsAppButton from './WhatsAppButton';
+import { useScrollToTop } from '../hooks/useScrollToTop';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +13,9 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  
+  // Scroll to top on route change
+  useScrollToTop();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -50,7 +55,7 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3">
+            <Link to="/" className="flex items-center space-x-3 animate-fade-in">
               <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white font-bold text-xl">
                 CI
               </div>
@@ -62,15 +67,15 @@ const Layout = ({ children }: LayoutProps) => {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex space-x-8">
-              {navigation.map((item) => (
+              {navigation.map((item, index) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`font-medium transition-colors ${
+                  className={`font-medium transition-colors hover:text-primary ${
                     isActive(item.href)
                       ? 'text-primary border-b-2 border-primary'
-                      : 'text-gray-700 hover:text-primary'
-                  }`}
+                      : 'text-gray-700'
+                  } animate-fade-in animate-delay-${(index + 1) * 100}`}
                 >
                   {item.name}
                 </Link>
@@ -81,7 +86,7 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="hidden lg:flex">
               <Link
                 to="/admission"
-                className="bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                className="bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 animate-pulse-soft"
               >
                 Enroll Now
               </Link>
@@ -98,7 +103,7 @@ const Layout = ({ children }: LayoutProps) => {
 
           {/* Mobile Menu */}
           {isMenuOpen && (
-            <div className="lg:hidden py-4 border-t">
+            <div className="lg:hidden py-4 border-t animate-slide-up">
               <nav className="flex flex-col space-y-4">
                 {navigation.map((item) => (
                   <Link
@@ -126,12 +131,15 @@ const Layout = ({ children }: LayoutProps) => {
       </header>
 
       {/* Main Content */}
-      <main>{children}</main>
+      <main className="page-enter page-enter-active">{children}</main>
+
+      {/* WhatsApp Floating Button */}
+      <WhatsAppButton />
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 animate-fade-in">
             <div>
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white font-bold">
